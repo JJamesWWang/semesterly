@@ -72,14 +72,10 @@ class UserAcquisitionModal extends React.Component {
             <span>Continue with Facebook</span>
           </button>
           <p className="method-details">Allows the option to friends in your classes.</p>
-
-
           <div className="or-separator">
             <span className="h6 or-separator--text">or</span>
             <hr />
           </div>
-
-
           <button
             className="btn abnb-btn secondary" onClick={() => {
               const link = document.createElement('a');
