@@ -55,7 +55,7 @@ class AdvisingView(RedirectToJHUSignupMixin, FeatureFlowView):
 class StudentSISView(ValidateSubdomainMixin, APIView):
     """ Handles SIS data retrieval and digesting. """
 
-    def get(self, request, jhed=None):
+    def get(self, request, jhed):
         """Gets all of the semesters that SIS has retrieved from
         Assumes student has already received a POST request from SIS
         Only includes Fall and Spring semesters
@@ -93,16 +93,13 @@ class StudentSISView(ValidateSubdomainMixin, APIView):
         return Response({'retrievedSemesters': semesters},
                         status=status.HTTP_200_OK)
 
-    def post(self, request, key=None):
+    def post(self, request):
         """Populates the database according to the SIS data.
         Fills students' advisors, majors, minors, and courses fields.
         """
         try:
-            if key:
-                payload = jwt.decode(request.body, key, algorithms=['HS256'])
-            else:
-                payload = jwt.decode(request.body, get_secret(
-                    'STUDENT_SIS_AUTH_SECRET'), algorithms=['HS256'])
+            payload = jwt.decode(request.body, get_secret(
+                'STUDENT_SIS_AUTH_SECRET'), algorithms=['HS256'])
             if payload == "null":
                 msg = 'Null token not allowed'
                 raise exceptions.AuthenticationFailed(msg)
@@ -165,7 +162,7 @@ class StudentSISView(ValidateSubdomainMixin, APIView):
 class RegisteredCoursesView(ValidateSubdomainMixin, APIView):
     """Handles retrieving timetable and SIS courses from a specific semester"""
 
-    def get(self, request, sem_name, year, jhed=None, tt_name=None):
+    def get(self, request, sem_name, year, jhed, tt_name=None):
         """If the 'jhed' key is provided, get the courses for the student with
         the corresponding JHED. The request user must be an Advisor. Otherwise,
         get the courses for the requesting student for this semester.
@@ -187,12 +184,9 @@ class RegisteredCoursesView(ValidateSubdomainMixin, APIView):
         """
         school = request.subdomain
         semester = Semester.objects.get(name=sem_name, year=year)
-        if jhed:
-            student = get_object_or_404(Student, jhed=jhed)
-            if not self.is_advisor_for_student(request, student, semester):
-                return Response(status=status.HTTP_403_FORBIDDEN)
-        else:
-            student = Student.objects.get(user=request.user)
+        student = get_object_or_404(Student, jhed=jhed)
+        if not self.is_advisor_for_student(request, student, semester):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         context = {'school': school, 'semester': semester, 'student': student}
         if tt_name:
