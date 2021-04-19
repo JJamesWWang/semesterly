@@ -412,7 +412,7 @@ class RegisteredCoursesViewTest(APITestCase):
         url = '/advising/sis_courses/Fall/2019/{}/'.format(self.student.jhed)
         request = self.factory.get(url)
         response = get_response(
-            request, self.student.user, url, 'Fall', '2019')
+            request, self.student.user, url, 'Fall', '2019', self.student.jhed)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         registered_courses = response.data['registeredCourses']
         self.assertEquals(len(registered_courses), 2)
@@ -423,7 +423,7 @@ class RegisteredCoursesViewTest(APITestCase):
         url = '/advising/sis_courses/Spring/2020/{}/'.format(self.student.jhed)
         request = self.factory.get(url)
         response = get_response(
-            request, self.student.user, url, 'Spring', '2020')
+            request, self.student.user, url, 'Spring', '2020', self.student.jhed)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         registered_courses = response.data['registeredCourses']
         self.assertEquals(len(registered_courses), 1)
