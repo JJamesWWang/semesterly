@@ -10,7 +10,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+from django.contrib.auth.models import User
 from django.test import TestCase
+from django.core.urlresolvers import resolve
 from helpers.test.test_cases import UrlTestCase
 from rest_framework import status
 from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate
@@ -24,19 +26,20 @@ from forum.models import Transcript
 
 class UrlsTest(TestCase, UrlTestCase):
     """ Test advising/urls.py """
+
     def setUp(self):
         semester = Semester.objects.create(name='Fall', year='2016')
         semester.save()
 
     def test_urls_call_correct_views(self):
         self.assertUrlResolvesToView(
-            '/advising/jhu_signup/','helpers.mixins.FeatureFlowView')
+            '/advising/jhu_signup/', 'helpers.mixins.FeatureFlowView')
         self.assertUrlResolvesToView(
             '/advising/', 'advising.views.AdvisingView')
         self.assertUrlResolvesToView(
             '/advising/sis_post/', 'advising.views.StudentSISView')
         self.assertUrlResolvesToView(
-            '/advising/sis_semesters/', 'advising.views.StudentSISView')    
+            '/advising/sis_semesters/', 'advising.views.StudentSISView')
         self.assertUrlResolvesToView(
             '/advising/sis_courses/Fall/2016/', 'advising.views.RegisteredCoursesView')
 
@@ -435,6 +438,10 @@ class RegisteredCoursesViewTest(APITestCase):
         self.assertEquals(len(registered_courses), 1)
         self.assertEquals(registered_courses[0]['code'], self.ifp.course.code)
 
+    # Write when the verification TODO is satisfied
+    # def test_student_courses_verified(self):
+    #     pass
+
     def test_advisor_get_courses(self):
         setUpTranscript(self)
         response = sis_post(self)
@@ -502,4 +509,8 @@ class RegisteredCoursesViewTest(APITestCase):
         response = sis_post(self)
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
-# TODO: Write more tests for advising app.
+        url = '/advising/sis_courses/Spring/2020/{}/'.format(self.student.jhed)
+        request = self.factory.get(url)
+        response = get_response(
+            request, self.advisor_user.user, url, 'Spring', '2020', self.student.jhed)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
